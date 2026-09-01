@@ -43,7 +43,12 @@ namespace SAGE.Compiler
         private static void DecompileEntry(Stream.File stream, List<Stream.File> referencedStreams,
             BaseEntryType baseEntry, XmlDocument document, XmlNode entryNode, List<AssetReference> assetReferences,
             byte[] bin, byte[] imp, byte[] relo, ref int binPosition)
-        {
+        { 
+            if (binPosition < 0 || binPosition >= bin.Length) // IMPORTANT: Needed to avoid crashing when loading ArmorTemplate, GameObject and WeaponTemplate (Evanati)
+            {
+                return;
+            }
+            
             if (baseEntry.IsVoid)
             {
                 binPosition += 4 - (binPosition % 4);
@@ -243,6 +248,12 @@ namespace SAGE.Compiler
                             binPosition += 4;
                             int stringOffset = FileHelper.GetInt(binPosition, bin);
                             binPosition += 4;
+
+                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                            {
+                                return;
+                            }
+
                             if (stringOffset != 0)
                             {
                                 attribute.Value += FileHelper.GetString(stringOffset, bin, stringLength);
@@ -359,6 +370,12 @@ namespace SAGE.Compiler
                     string typeDefaultValue = string.Empty;
                     int relocationOffset = FileHelper.GetInt(binPosition, bin);
                     binPosition += 4;
+
+                    if (relocationOffset <= 0 || relocationOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                    {
+                        return;
+                    }
+
                     if (relocationOffset == 0)
                     {
                         return;
@@ -420,6 +437,12 @@ namespace SAGE.Compiler
                             int stringLength = FileHelper.GetInt(relocationOffset, bin);
                             relocationOffset += 4;
                             int stringOffset = FileHelper.GetInt(relocationOffset, bin);
+
+                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                            {
+                                break;
+                            }
+
                             if (stringOffset != 0)
                             {
                                 attribute.Value = FileHelper.GetString(stringOffset, bin, stringLength);
@@ -478,6 +501,12 @@ namespace SAGE.Compiler
                     binPosition += 4;
                     int listOffset = FileHelper.GetInt(binPosition, bin);
                     binPosition += 4;
+
+                    if (listLength < 0 || listOffset < 0 || listOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                    {
+                        return;
+                    }
+
                     if (listOffset == 0)
                     {
                         return;
@@ -492,6 +521,12 @@ namespace SAGE.Compiler
                                 listOffset += 4;
                                 int stringOffset = FileHelper.GetInt(listOffset, bin);
                                 listOffset += 4;
+
+                                if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                                {
+                                    break;
+                                }
+
                                 if (stringOffset != 0)
                                 {
                                     attribute.Value += FileHelper.GetString(stringOffset, bin, stringLength);
@@ -731,6 +766,12 @@ namespace SAGE.Compiler
                             binPosition += 4;
                             int stringOffset = FileHelper.GetInt(binPosition, bin);
                             binPosition += 4;
+
+                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                            {
+                                break;
+                            }
+
                             if (stringOffset != 0)
                             {
                                 element.InnerXml = FileHelper.GetString(stringOffset, bin, stringLength);
@@ -786,10 +827,12 @@ namespace SAGE.Compiler
                 {
                     int relocationOffset = FileHelper.GetInt(binPosition, bin);
                     binPosition += 4;
-                    if (relocationOffset == 0)
+
+                    if (relocationOffset <= 0 || relocationOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
                     {
                         return;
                     }
+
                     XmlNode element = document.CreateElement(baseEntry.id, xmlNameSpace);
                     entryNode.AppendChild(element);
                     EntryRelocationType entry = baseEntry as EntryRelocationType;
@@ -850,6 +893,12 @@ namespace SAGE.Compiler
                             int stringLength = FileHelper.GetInt(relocationOffset, bin);
                             relocationOffset += 4;
                             int stringOffset = FileHelper.GetInt(relocationOffset, bin);
+
+                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                            {
+                                break;
+                            }
+
                             if (stringOffset != 0)
                             {
                                 element.InnerXml = FileHelper.GetString(stringOffset, bin, stringLength);
@@ -907,10 +956,17 @@ namespace SAGE.Compiler
                     binPosition += 4;
                     int listOffset = FileHelper.GetInt(binPosition, bin);
                     binPosition += 4;
+
+                    if (listLength < 0 || listOffset < 0 || listOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                    {
+                        return;
+                    }
+
                     if (listOffset == 0)
                     {
                         return;
                     }
+
                     EntryListType entry = baseEntry as EntryListType;
                     foreach (BaseAssetType baseAssetType in game.Assets.AssetTypes)
                     {
@@ -978,6 +1034,12 @@ namespace SAGE.Compiler
                                 listOffset += 4;
                                 int stringOffset = FileHelper.GetInt(listOffset, bin);
                                 listOffset += 4;
+
+                                if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                                {
+                                    break;
+                                }
+
                                 if (stringOffset != 0)
                                 {
                                     element.InnerXml = FileHelper.GetString(stringOffset, bin, stringLength);

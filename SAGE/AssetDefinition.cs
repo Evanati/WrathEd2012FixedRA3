@@ -54,22 +54,45 @@ namespace SAGE
 			return 4;
 		}
 
+
 		public string GetValue(int index)
 		{
-			if (IsStartingNegative)
-			{
-				return Enums[index + 1];
-			}
-			return Enums[index];
+    		if (IsStartingNegative)
+    		{
+        		if (index >= Enums.Length - 1) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+        		{
+           			return null;
+        		}
+
+        		return Enums[index + 1];
+    		}
+
+    		if (index >= Enums.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+    		{
+       			return null;
+    		}
+
+    		return Enums[index];
 		}
 
 		public string GetValue(uint index)
 		{
-			if (IsStartingNegative)
-			{
-				return Enums[index + 1];
-			}
-			return Enums[index];
+    		if (IsStartingNegative)
+    		{
+        		if (index >= Enums.Length - 1) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+        		{
+           			return null;
+        		}
+
+        		return Enums[index + 1];
+    		}
+
+    		if (index >= Enums.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+    		{
+       			return null;
+    		}
+
+    		return Enums[index];
 		}
 
 		public uint GetValue(string name)

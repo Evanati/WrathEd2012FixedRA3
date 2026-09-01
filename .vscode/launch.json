@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug WrathEd",
+            "type": "clr",
+            "request": "launch",
+            "program": "${workspaceFolder}/WrathEd/bin/Debug/WrathEd.exe",
+            "cwd": "${workspaceFolder}/WrathEd/bin/Debug",
+            "stopAtEntry": false,
+            "justMyCode": false
+        }
+    ]
+}
