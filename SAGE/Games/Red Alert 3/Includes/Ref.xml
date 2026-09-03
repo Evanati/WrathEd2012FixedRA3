@@ -516,4 +516,60 @@
 			AssetType="UnitIntro" />
 	</Asset>
 
+	<Asset
+		id="AssetId">
+		<EntryReference
+			id="AssetId"
+			AssetType="BaseAssetType" />
+	</Asset>
+
+	<Asset
+		id="MusicScriptConditionRef">
+		<EntryReference
+			id="MusicScriptConditionNuggetBase"
+			AssetType="MusicScriptConditionNuggetBase" />
+	</Asset>
+
+	<Asset
+		id="MusicScriptTrackRef">
+		<EntryReference
+			id="MusicScriptTrack"
+			AssetType="MusicScriptTrack" />
+	</Asset>
+
+	<Asset
+		id="ArmorTemplateRef">
+		<EntryReference
+			id="ArmorTemplate"
+			AssetType="ArmorTemplate" />
+	</Asset>
+
+	<Asset
+		id="MissionTemplateRef">
+		<EntryReference
+			id="MissionTemplate"
+			AssetType="MissionTemplate" />
+	</Asset>
+
+	<Asset
+		id="TheaterOfWarTemplateRef">
+		<EntryReference
+			id="TheaterOfWarTemplate"
+			AssetType="TheaterOfWarTemplate" />
+	</Asset>
+
+	<Asset
+		id="ExperienceLevelTemplateRef">
+		<EntryReference
+			id="ExperienceLevelTemplate"
+			AssetType="ExperienceLevelTemplate" />
+	</Asset>
+
+	<Asset
+		id="WeaponTemplateRef">
+		<EntryReference
+			id="WeaponTemplate"
+			AssetType="WeaponTemplate" />
+	</Asset>
+
 </AssetDefinition>
