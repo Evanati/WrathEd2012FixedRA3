@@ -59,7 +59,7 @@ namespace SAGE
 		{
     		if (IsStartingNegative)
     		{
-        		if (index >= Enums.Length - 1) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+        		if (index >= Enums.Length - 1) // Guard against invalid list metadata
         		{
            			return null;
         		}
@@ -67,7 +67,7 @@ namespace SAGE
         		return Enums[index + 1];
     		}
 
-    		if (index >= Enums.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+    		if (index >= Enums.Length) // Guard against invalid list metadata
     		{
        			return null;
     		}
@@ -79,7 +79,7 @@ namespace SAGE
 		{
     		if (IsStartingNegative)
     		{
-        		if (index >= Enums.Length - 1) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+        		if (index >= Enums.Length - 1) // Guard against invalid list metadata
         		{
            			return null;
         		}
@@ -87,7 +87,7 @@ namespace SAGE
         		return Enums[index + 1];
     		}
 
-    		if (index >= Enums.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+    		if (index >= Enums.Length) // Guard against invalid list metadata
     		{
        			return null;
     		}

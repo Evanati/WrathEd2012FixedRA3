@@ -44,8 +44,14 @@ namespace SAGE.Compiler
             BaseEntryType baseEntry, XmlDocument document, XmlNode entryNode, List<AssetReference> assetReferences,
             byte[] bin, byte[] imp, byte[] relo, ref int binPosition)
         { 
-            if (binPosition < 0 || binPosition >= bin.Length) // IMPORTANT: Needed to avoid crashing when loading ArmorTemplate, GameObject and WeaponTemplate (Evanati)
+            if (binPosition < 0 || binPosition >= bin.Length) // Guard against invalid list metadata
             {
+                return;
+            }
+
+            if (baseEntry.IsJumper) // Guard against invalid list metadata
+            {
+                binPosition = FileHelper.GetInt(binPosition, bin);
                 return;
             }
             
@@ -249,7 +255,7 @@ namespace SAGE.Compiler
                             int stringOffset = FileHelper.GetInt(binPosition, bin);
                             binPosition += 4;
 
-                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Guard against invalid list metadata
                             {
                                 return;
                             }
@@ -371,7 +377,7 @@ namespace SAGE.Compiler
                     int relocationOffset = FileHelper.GetInt(binPosition, bin);
                     binPosition += 4;
 
-                    if (relocationOffset <= 0 || relocationOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                    if (relocationOffset <= 0 || relocationOffset >= bin.Length) // Guard against invalid list metadata
                     {
                         return;
                     }
@@ -438,7 +444,7 @@ namespace SAGE.Compiler
                             relocationOffset += 4;
                             int stringOffset = FileHelper.GetInt(relocationOffset, bin);
 
-                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Guard against invalid list metadata
                             {
                                 break;
                             }
@@ -502,7 +508,7 @@ namespace SAGE.Compiler
                     int listOffset = FileHelper.GetInt(binPosition, bin);
                     binPosition += 4;
 
-                    if (listLength < 0 || listOffset < 0 || listOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                    if (listLength < 0 || listOffset < 0 || listOffset >= bin.Length) // Guard against invalid list metadata
                     {
                         return;
                     }
@@ -522,7 +528,7 @@ namespace SAGE.Compiler
                                 int stringOffset = FileHelper.GetInt(listOffset, bin);
                                 listOffset += 4;
 
-                                if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                                if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Guard against invalid list metadata
                                 {
                                     break;
                                 }
@@ -767,7 +773,7 @@ namespace SAGE.Compiler
                             int stringOffset = FileHelper.GetInt(binPosition, bin);
                             binPosition += 4;
 
-                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Guard against invalid list metadata
                             {
                                 break;
                             }
@@ -828,7 +834,7 @@ namespace SAGE.Compiler
                     int relocationOffset = FileHelper.GetInt(binPosition, bin);
                     binPosition += 4;
 
-                    if (relocationOffset <= 0 || relocationOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                    if (relocationOffset <= 0 || relocationOffset >= bin.Length) // Guard against invalid list metadata
                     {
                         return;
                     }
@@ -894,7 +900,7 @@ namespace SAGE.Compiler
                             relocationOffset += 4;
                             int stringOffset = FileHelper.GetInt(relocationOffset, bin);
 
-                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                            if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Guard against invalid list metadata
                             {
                                 break;
                             }
@@ -957,7 +963,7 @@ namespace SAGE.Compiler
                     int listOffset = FileHelper.GetInt(binPosition, bin);
                     binPosition += 4;
 
-                    if (listLength < 0 || listOffset < 0 || listOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                    if (listLength < 0 || listOffset < 0 || listOffset >= bin.Length) // Guard against invalid list metadata
                     {
                         return;
                     }
@@ -1035,7 +1041,7 @@ namespace SAGE.Compiler
                                 int stringOffset = FileHelper.GetInt(listOffset, bin);
                                 listOffset += 4;
 
-                                if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Needed to fix ArmorTemplate, GameObject and WeaponTemplate crashes (Evanati)
+                                if (stringLength < 0 || stringOffset < 0 || stringOffset >= bin.Length) // Guard against invalid list metadata
                                 {
                                     break;
                                 }

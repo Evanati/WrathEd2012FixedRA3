@@ -27,6 +27,7 @@ namespace SAGE
 		public bool IsAttribute { get; protected set; }
 		public bool IsRequired { get; protected set; }
 		public bool IsVoid { get; protected set; }
+		public bool IsJumper { get; protected set; }
 
 		public BaseEntryType(WrathEdXML.AssetDefinition.BaseEntryType entry)
 		{
@@ -34,6 +35,7 @@ namespace SAGE
 			IsAttribute = entry.IsAttribute;
 			IsRequired = entry.IsRequired;
 			IsVoid = entry.IsVoid;
+			IsJumper = entry.IsJumper;
 		}
 
 		public abstract bool Compile(Uri baseUri, BinaryAsset asset, XmlNode node, GameDefinition game, string trace, ref int position, out string ErrorDescription);
