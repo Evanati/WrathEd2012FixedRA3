@@ -5,7 +5,7 @@ namespace SAGE.Types
 {
 	public class SageBool : SageBase
 	{
-		public const string DefaultValue = "False";
+		public const string DefaultValue = "false";
 		public bool Value
 		{
 			get

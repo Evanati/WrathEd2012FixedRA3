@@ -34,6 +34,9 @@ namespace SAGE.Compiler
         private const string Velocity = "Velocity";
         private const string DurationUnsignedInt = "DurationUnsignedInt";
 
+        // Test
+        private const string searchedAssetName = "AIStrategicStateDefinition:";
+
         static AssetCompiler()
         {
             TempAssets = new Dictionary<string, Asset>();
@@ -54,6 +57,65 @@ namespace SAGE.Compiler
                 binPosition = FileHelper.GetInt(binPosition, bin);
                 return;
             }
+
+/*
+            int debugStart = Math.Max(0, binPosition);
+            int debugLength = Math.Min(16, bin.Length - debugStart);
+
+            StringBuilder debugBytes = new StringBuilder();
+
+            for (int i = 0; i < debugLength; ++i)
+            {
+                if (i != 0)
+                    debugBytes.Append(" ");
+
+                debugBytes.Append(bin[debugStart + i].ToString("X2"));
+            }
+
+            string debugValue = "?";
+
+            try
+            {
+                string entryTypeTest = baseEntry.GetType().Name;
+
+                if (binPosition + 3 < bin.Length)
+                {
+                    float asFloat = FileHelper.GetFloat(binPosition, bin);
+                    int asInt = FileHelper.GetInt(binPosition, bin);
+                    uint asUInt = FileHelper.GetUInt(binPosition, bin);
+
+                    debugValue =
+                        $"Float={asFloat}, Int={asInt}, UInt={asUInt}";
+                }
+
+                bool is60 =
+                    binPosition >= 0 &&
+                    binPosition + 3 < bin.Length &&
+                    bin[binPosition]     == 0x00 &&
+                    bin[binPosition + 1] == 0x00 &&
+                    bin[binPosition + 2] == 0x20 &&
+                    bin[binPosition + 3] == 0x42;
+
+                System.Diagnostics.Debug.WriteLine(
+                    $"{(is60 ? ">>> 40.0 <<< " : "")}" +
+                    $"FIELD " +
+                    $"Element={entryNode.Name}, " +
+                    $"Id={baseEntry.id}, " +
+                    $"EntryType={entryTypeTest}, " +
+                    $"Value={debugValue}, " +
+                    $"Pos=0x{binPosition:X}, " +
+                    $"Bytes={debugBytes}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"FIELD Element={entryNode.Name}, " +
+                    $"Id={baseEntry.id}, " +
+                    $"EntryType={baseEntry.GetType().Name}, " +
+                    $"Value=<ERROR: {ex.Message}>, " +
+                    $"Pos=0x{binPosition:X}");
+            }
+            */
             
             if (baseEntry.IsVoid)
             {
@@ -73,6 +135,14 @@ namespace SAGE.Compiler
                         attribute.Value += string.Format("{0:X08}", poid);
                         entryNode.Attributes.Append(attribute);
                     }
+
+                    Console.WriteLine(
+    "POID: Element={0}, Entry={1}, Value={2:X08}",
+    entryNode.Name,
+    baseEntry.id,
+    poid
+);
+
                 }
                 if (entryType == typeof(EntryReferenceType))
                 {
@@ -95,6 +165,13 @@ namespace SAGE.Compiler
                         bool isFound = false;
                         foreach (AssetEntry assetEntry in stream.AssetEntries)
                         {
+                            string fullName = stream.AssetNames[assetEntry.NameOffset];
+
+                            if (fullName.StartsWith(searchedAssetName))
+                            {
+                                Console.WriteLine($"{fullName} -> {referenceIndex} -> {assetEntry.InstanceId:X08}");
+                            }
+                            
                             if (assetEntry.TypeId == assetReferences[referenceIndex].TypeId && assetEntry.InstanceId == assetReferences[referenceIndex].InstanceId)
                             {
                                 attribute.Value += stream.AssetNames[assetEntry.NameOffset].Split(':')[1];
@@ -108,6 +185,13 @@ namespace SAGE.Compiler
                             {
                                 foreach (AssetEntry assetEntry in file.AssetEntries)
                                 {
+                                    string fullName = file.AssetNames[assetEntry.NameOffset];
+
+                                    if (fullName.StartsWith(searchedAssetName))
+                                    {
+                                        Console.WriteLine($"{fullName} -> {referenceIndex} -> {assetEntry.InstanceId:X08}");
+                                    }
+                                    
                                     if (assetEntry.TypeId == assetReferences[referenceIndex].TypeId && assetEntry.InstanceId == assetReferences[referenceIndex].InstanceId)
                                     {
                                         attribute.Value += file.AssetNames[assetEntry.NameOffset].Split(':')[1];
@@ -121,61 +205,164 @@ namespace SAGE.Compiler
                                 }
                             }
                         }
-                        if (!isFound)
-                        {
-                            attribute.Value += string.Format("Asset not found in stream: [{0:X08}:{1:X08}]", assetReferences[referenceIndex].TypeId, assetReferences[referenceIndex].InstanceId);
-                        }
+if (!isFound)
+{
+    
+    Console.WriteLine(
+        "UNRESOLVED REF: Index={0}, TypeId={1:X08}, InstanceId={2:X08}, AssetType={3}",
+        referenceIndex,
+        assetReferences[referenceIndex].TypeId,
+        assetReferences[referenceIndex].InstanceId,
+        baseEntry.id
+    );
+    
+
+    attribute.Value += string.Format(
+        "Asset not found in stream: [{0:X08}:{1:X08}]",
+        assetReferences[referenceIndex].TypeId,
+        assetReferences[referenceIndex].InstanceId
+    );
+}
                     }
                     binPosition += 4;
                     entryNode.Attributes.Append(attribute);
                 }
-                else if (entryType == typeof(EntryWeakReferenceType))
+else if (entryType == typeof(EntryWeakReferenceType))
+{
+    uint typeId = 0;
+
+    if ((baseEntry as EntryWeakReferenceType).AssetType != "BaseAssetType")
+    {
+        typeId = StringHasher.Hash(
+            (baseEntry as EntryWeakReferenceType).AssetType
+        );
+    }
+
+    uint reference = FileHelper.GetUInt(binPosition, bin);
+    binPosition += 4;
+
+    if (reference != 0)
+    {
+        bool isFound = false;
+
+        // First try as a local AssetReference index.
+        int referenceIndex = (int)reference;
+
+        if (game.ManifestVersion != 5)
+        {
+            --referenceIndex;
+        }
+
+        if (referenceIndex >= 0 &&
+            referenceIndex < assetReferences.Count)
+        {
+            AssetReference assetReference =
+                assetReferences[referenceIndex];
+
+            foreach (AssetEntry assetEntry in stream.AssetEntries)
+            {
+                if ((typeId == 0 || assetReference.TypeId == typeId) &&
+                    assetEntry.TypeId == assetReference.TypeId &&
+                    assetEntry.InstanceId == assetReference.InstanceId)
                 {
-                    uint typeId = 0;
-                    if ((baseEntry as EntryWeakReferenceType).AssetType != "BaseAssetType")
-                    {
-                        typeId = StringHasher.Hash((baseEntry as EntryWeakReferenceType).AssetType);
-                    }
-                    uint reference = FileHelper.GetUInt(binPosition, bin);
-                    binPosition += 4;
-                    if (reference != 0)
-                    {
-                        bool isFound = false;
-                        foreach (AssetEntry assetEntry in stream.AssetEntries)
-                        {
-                            if ((typeId == 0 || assetEntry.TypeId == typeId) && assetEntry.InstanceId == reference)
-                            {
-                                attribute.Value += stream.AssetNames[assetEntry.NameOffset].Split(':')[1];
-                                isFound = true;
-                                break;
-                            }
-                        }
-                        if (!isFound && referencedStreams != null)
-                        {
-                            foreach (Stream.File file in referencedStreams)
-                            {
-                                foreach (AssetEntry assetEntry in file.AssetEntries)
-                                {
-                                    if ((typeId == 0 || assetEntry.TypeId == typeId) && assetEntry.InstanceId == reference)
-                                    {
-                                        attribute.Value += file.AssetNames[assetEntry.NameOffset].Split(':')[1];
-                                        isFound = true;
-                                        break;
-                                    }
-                                }
-                                if (isFound)
-                                {
-                                    break;
-                                }
-                            }
-                        }
-                        if (!isFound)
-                        {
-                            attribute.Value += string.Format("Asset not found in stream: [{0:X08}]", reference);
-                        }
-                    }
-                    entryNode.Attributes.Append(attribute);
+                    attribute.Value +=
+                        stream.AssetNames[assetEntry.NameOffset]
+                            .Split(':')[1];
+
+                    isFound = true;
+                    break;
                 }
+            }
+
+            if (!isFound && referencedStreams != null)
+            {
+                foreach (Stream.File file in referencedStreams)
+                {
+                    foreach (AssetEntry assetEntry in file.AssetEntries)
+                    {
+                        if ((typeId == 0 || assetReference.TypeId == typeId) &&
+                            assetEntry.TypeId == assetReference.TypeId &&
+                            assetEntry.InstanceId == assetReference.InstanceId)
+                        {
+                            attribute.Value +=
+                                file.AssetNames[assetEntry.NameOffset]
+                                    .Split(':')[1];
+
+                            isFound = true;
+                            break;
+                        }
+                    }
+
+                    if (isFound)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Fallback: treat the raw value as a direct InstanceId.
+        if (!isFound)
+        {
+            foreach (AssetEntry assetEntry in stream.AssetEntries)
+            {
+                if ((typeId == 0 || assetEntry.TypeId == typeId) &&
+                    assetEntry.InstanceId == reference)
+                {
+                    attribute.Value +=
+                        stream.AssetNames[assetEntry.NameOffset]
+                            .Split(':')[1];
+
+                    isFound = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isFound && referencedStreams != null)
+        {
+            foreach (Stream.File file in referencedStreams)
+            {
+                foreach (AssetEntry assetEntry in file.AssetEntries)
+                {
+                    if ((typeId == 0 || assetEntry.TypeId == typeId) &&
+                        assetEntry.InstanceId == reference)
+                    {
+                        attribute.Value +=
+                            file.AssetNames[assetEntry.NameOffset]
+                                .Split(':')[1];
+
+                        isFound = true;
+                        break;
+                    }
+                }
+
+                if (isFound)
+                {
+                    break;
+                }
+            }
+        }
+
+        if (!isFound)
+        {
+            attribute.Value += string.Format(
+                "Asset not found in stream: [{0:X08}]",
+                reference
+            );
+
+            Console.WriteLine(
+    "UNRESOLVED: Entry={0}, EntryType={1}, Value={2:X08}",
+    baseEntry.id,
+    entryType.Name,
+    reference
+);
+
+        }
+    }
+
+    entryNode.Attributes.Append(attribute);
+}
                 else if (entryType == typeof(EntryType))
                 {
                     string defaultValue = string.Empty;
@@ -299,10 +486,12 @@ namespace SAGE.Compiler
                         case SageBool:
                             if (entry.Default != null)
                             {
-                                defaultValue = new SAGE.Types.SageBool(entry.Default).Value.ToString();
+                                defaultValue = new SAGE.Types.SageBool(entry.Default).Value ? "true" : "false";
                             }
                             typeDefaultValue = SAGE.Types.SageBool.DefaultValue;
-                            attribute.Value += FileHelper.GetBool(binPosition, bin).ToString();
+
+                            attribute.Value += FileHelper.GetBool(binPosition, bin) ? "true" : "false";
+
                             ++binPosition;
                             break;
                         case SageInt:
@@ -602,6 +791,15 @@ namespace SAGE.Compiler
                     {
                         element.InnerXml += string.Format("{0:X08}", poid);
                     }
+
+
+                    Console.WriteLine(
+    "POID: Element={0}, Entry={1}, Value={2:X08}",
+    entryNode.Name,
+    baseEntry.id,
+    poid
+);
+
                 }
                 else if (entryType == typeof(EntryFileType))
                 {
@@ -690,60 +888,162 @@ namespace SAGE.Compiler
                                 }
                             }
                         }
-                        if (!isFound)
-                        {
-                            element.InnerXml = string.Format("Asset not found in stream: [{0:X08}:{1:X08}]", assetReferences[referenceIndex].TypeId, assetReferences[referenceIndex].InstanceId);
-                        }
+if (!isFound)
+{
+    
+    Console.WriteLine(
+        "UNRESOLVED REF: Index={0}, TypeId={1:X08}, InstanceId={2:X08}, AssetType={3}",
+        referenceIndex,
+        assetReferences[referenceIndex].TypeId,
+        assetReferences[referenceIndex].InstanceId,
+        baseEntry.id
+    );
+    
+
+    element.InnerXml = string.Format(
+        "Asset not found in stream: [{0:X08}:{1:X08}]",
+        assetReferences[referenceIndex].TypeId,
+        assetReferences[referenceIndex].InstanceId
+    );
+}
                     }
                     binPosition += 4;
                 }
-                else if (entryType == typeof(EntryWeakReferenceType))
+else if (entryType == typeof(EntryWeakReferenceType))
+{
+    XmlNode element = entryNode;
+
+    uint typeId = 0;
+
+    if ((baseEntry as EntryWeakReferenceType).AssetType != "BaseAssetType")
+    {
+        typeId = StringHasher.Hash(
+            (baseEntry as EntryWeakReferenceType).AssetType
+        );
+    }
+
+    uint reference = FileHelper.GetUInt(binPosition, bin);
+    binPosition += 4;
+
+    if (reference != 0)
+    {
+        bool isFound = false;
+
+        // First try as a local AssetReference index.
+        int referenceIndex = (int)reference;
+
+        if (game.ManifestVersion != 5)
+        {
+            --referenceIndex;
+        }
+
+        if (referenceIndex >= 0 &&
+            referenceIndex < assetReferences.Count)
+        {
+            AssetReference assetReference =
+                assetReferences[referenceIndex];
+
+            foreach (AssetEntry assetEntry in stream.AssetEntries)
+            {
+                if ((typeId == 0 || assetReference.TypeId == typeId) &&
+                    assetEntry.TypeId == assetReference.TypeId &&
+                    assetEntry.InstanceId == assetReference.InstanceId)
                 {
-                    XmlNode element = entryNode;
-                    uint typeId = 0;
-                    if ((baseEntry as EntryWeakReferenceType).AssetType != "BaseAssetType")
+                    element.InnerXml =
+                        stream.AssetNames[assetEntry.NameOffset]
+                            .Split(':')[1];
+
+                    isFound = true;
+                    break;
+                }
+            }
+
+            if (!isFound && referencedStreams != null)
+            {
+                foreach (Stream.File file in referencedStreams)
+                {
+                    foreach (AssetEntry assetEntry in file.AssetEntries)
                     {
-                        typeId = StringHasher.Hash((baseEntry as EntryWeakReferenceType).AssetType);
+                        if ((typeId == 0 || assetReference.TypeId == typeId) &&
+                            assetEntry.TypeId == assetReference.TypeId &&
+                            assetEntry.InstanceId == assetReference.InstanceId)
+                        {
+                            element.InnerXml =
+                                file.AssetNames[assetEntry.NameOffset]
+                                    .Split(':')[1];
+
+                            isFound = true;
+                            break;
+                        }
                     }
-                    uint reference = FileHelper.GetUInt(binPosition, bin);
-                    binPosition += 4;
-                    if (reference != 0)
+
+                    if (isFound)
                     {
-                        bool isFound = false;
-                        foreach (AssetEntry assetEntry in stream.AssetEntries)
-                        {
-                            if ((typeId == 0 || assetEntry.TypeId == typeId) && assetEntry.InstanceId == reference)
-                            {
-                                element.InnerXml = stream.AssetNames[assetEntry.NameOffset].Split(':')[1];
-                                isFound = true;
-                                break;
-                            }
-                        }
-                        if (!isFound && referencedStreams != null)
-                        {
-                            foreach (Stream.File file in referencedStreams)
-                            {
-                                foreach (AssetEntry assetEntry in file.AssetEntries)
-                                {
-                                    if ((typeId == 0 || assetEntry.TypeId == typeId) && assetEntry.InstanceId == reference)
-                                    {
-                                        element.InnerXml = file.AssetNames[assetEntry.NameOffset].Split(':')[1];
-                                        isFound = true;
-                                        break;
-                                    }
-                                }
-                                if (isFound)
-                                {
-                                    break;
-                                }
-                            }
-                        }
-                        if (!isFound)
-                        {
-                            element.InnerXml = string.Format("Asset not found in stream: [{0:X08}]", reference);
-                        }
+                        break;
                     }
                 }
+            }
+        }
+
+        // Fallback: treat the raw value as a direct InstanceId.
+        if (!isFound)
+        {
+            foreach (AssetEntry assetEntry in stream.AssetEntries)
+            {
+                if ((typeId == 0 || assetEntry.TypeId == typeId) &&
+                    assetEntry.InstanceId == reference)
+                {
+                    element.InnerXml =
+                        stream.AssetNames[assetEntry.NameOffset]
+                            .Split(':')[1];
+
+                    isFound = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isFound && referencedStreams != null)
+        {
+            foreach (Stream.File file in referencedStreams)
+            {
+                foreach (AssetEntry assetEntry in file.AssetEntries)
+                {
+                    if ((typeId == 0 || assetEntry.TypeId == typeId) &&
+                        assetEntry.InstanceId == reference)
+                    {
+                        element.InnerXml =
+                            file.AssetNames[assetEntry.NameOffset]
+                                .Split(':')[1];
+
+                        isFound = true;
+                        break;
+                    }
+                }
+
+                if (isFound)
+                {
+                    break;
+                }
+            }
+        }
+
+        if (!isFound)
+        {
+            element.InnerXml = string.Format(
+                "Asset not found in stream: [{0:X08}]",
+                reference
+            );
+
+            Console.WriteLine(
+    "UNRESOLVED: Entry={0}, EntryType={1}, Value={2:X08}",
+    baseEntry.id,
+    entryType.Name,
+    reference
+);
+        }
+    }
+}
                 else if (entryType == typeof(EntryType))
                 {
                     XmlNode element = document.CreateElement(baseEntry.id, xmlNameSpace);

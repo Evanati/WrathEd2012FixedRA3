@@ -78,6 +78,14 @@ namespace WrathEd
 
         private void LoadConfig(Uri source)
         {
+                Console.WriteLine("LOADING SKUDEF: " + source.LocalPath);
+
+    using (FileStream streamTest = new FileStream(
+        source.LocalPath,
+        FileMode.Open,
+        FileAccess.Read,
+        FileShare.Read))
+            
             using (FileStream stream = new FileStream(source.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 using (StreamReader reader = new StreamReader(stream))
@@ -150,10 +158,17 @@ namespace WrathEd
                                 versionFiles.Add(fileNameWithoutExtension, FileHelper.GetString(0x00, bigFile.GetFile(file, bigFile.GetFileSize(file))).Trim(new char[] { '\r', '\n' }));
                             }
                             break;
-                        case ".manifest":
-                            streamFiles.Add(new SAGE.Stream.File(bigFile.GetFile(file, bigFile.GetFileSize(file))));
-                            streamPackedFiles.Add(file);
-                            break;
+case ".manifest":
+    Console.WriteLine(
+        "MANIFEST: BIG={0}  FILE={1}",
+        bigFile,
+        file.Name);
+
+    streamFiles.Add(
+        new SAGE.Stream.File(
+            bigFile.GetFile(file, bigFile.GetFileSize(file))));
+    streamPackedFiles.Add(file);
+    break;
                     }
                 }
                 SetBarToValue((double)(++bigFileCount) / bigFiles.Count * 100);
