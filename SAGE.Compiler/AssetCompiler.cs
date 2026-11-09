@@ -36,6 +36,10 @@ namespace SAGE.Compiler
 
         // Test
         private const string searchedAssetName = "AIStrategicStateDefinition:";
+        private static string currentElementName = "";
+        private static string currentIdName = "";
+        private static string previousElementName = "";
+        private static string previousIdName = "";
 
         static AssetCompiler()
         {
@@ -58,7 +62,6 @@ namespace SAGE.Compiler
                 return;
             }
 
-/*
             int debugStart = Math.Max(0, binPosition);
             int debugLength = Math.Min(16, bin.Length - debugStart);
 
@@ -115,7 +118,6 @@ namespace SAGE.Compiler
                     $"Value=<ERROR: {ex.Message}>, " +
                     $"Pos=0x{binPosition:X}");
             }
-            */
             
             if (baseEntry.IsVoid)
             {
@@ -449,7 +451,16 @@ else if (entryType == typeof(EntryWeakReferenceType))
 
                             if (stringOffset != 0)
                             {
-                                attribute.Value += FileHelper.GetString(stringOffset, bin, stringLength);
+                                // TO AVOID OUT OF BOUNDS CRASH
+                                try
+                                {
+                                    attribute.Value += FileHelper.GetString(stringOffset, bin, stringLength);
+                                }
+                                catch(ArgumentOutOfRangeException e)
+                                {
+                                    return;
+                                }
+                                // TO AVOID OUT OF BOUNDS CRASH
                             }
                             else
                             {
@@ -1322,6 +1333,19 @@ else if (entryType == typeof(EntryWeakReferenceType))
                                     AssetType assetType = baseAssetType as AssetType;
                                     foreach (BaseEntryType assetEntry in assetType.Entries)
                                     {
+                                        // TO STOP INFINITE DECOMPILE LOOP
+                                        currentElementName = entryNode.Name;
+                                        currentIdName = baseEntry.id;
+
+                                        if(currentElementName.Equals(previousElementName) && currentIdName.Equals(previousIdName))
+                                        {
+                                            return;
+                                        }
+
+                                        previousElementName = currentElementName;
+                                        previousIdName = currentIdName;
+                                        // TO STOP INFINITE DECOMPILE LOOP
+                                        
                                         DecompileEntry(stream, referencedStreams, assetEntry, document, element, assetReferences, bin, imp, relo, ref listOffset);
                                     }
                                 }
@@ -1563,10 +1587,6 @@ else if (entryType == typeof(EntryWeakReferenceType))
                                         break;
                                     }
                                 }
-                            }
-                            else
-                            {
-                                int i = 1;
                             }
                         }
                         // end - handle special cases first
