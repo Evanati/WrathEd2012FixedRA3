@@ -34,12 +34,17 @@ namespace SAGE.Compiler
         private const string Velocity = "Velocity";
         private const string DurationUnsignedInt = "DurationUnsignedInt";
 
-        // Test
+        // Testing
         private const string searchedAssetName = "AIStrategicStateDefinition:";
+
+        private const int repeatedDecompilesLimit = 500; // higher values allow deeper decompiles but is exponentially slower
+        private static int repeatedDecompiles = 0;
         private static string currentElementName = "";
         private static string currentIdName = "";
+        private static string currentEntryTypeName = "";
         private static string previousElementName = "";
         private static string previousIdName = "";
+        private static string previousEntryTypeName = "";
 
         static AssetCompiler()
         {
@@ -1336,14 +1341,28 @@ else if (entryType == typeof(EntryWeakReferenceType))
                                         // TO STOP INFINITE DECOMPILE LOOP
                                         currentElementName = entryNode.Name;
                                         currentIdName = baseEntry.id;
+                                        currentEntryTypeName = baseEntry.GetType().Name;
 
-                                        if(currentElementName.Equals(previousElementName) && currentIdName.Equals(previousIdName))
+                                        if(currentElementName.Equals(previousElementName) && currentIdName.Equals(previousIdName) && currentEntryTypeName.Equals(previousEntryTypeName))
                                         {
-                                            return;
+                                            repeatedDecompiles++;
+
+                                            if(repeatedDecompiles == repeatedDecompilesLimit)
+                                            {
+                                                return;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if(repeatedDecompiles > 0)
+                                            {
+                                                repeatedDecompiles = 0;
+                                            }
                                         }
 
                                         previousElementName = currentElementName;
                                         previousIdName = currentIdName;
+                                        previousEntryTypeName = currentEntryTypeName;
                                         // TO STOP INFINITE DECOMPILE LOOP
                                         
                                         DecompileEntry(stream, referencedStreams, assetEntry, document, element, assetReferences, bin, imp, relo, ref listOffset);
