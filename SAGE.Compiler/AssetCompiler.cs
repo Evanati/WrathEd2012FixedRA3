@@ -37,7 +37,7 @@ namespace SAGE.Compiler
         // Testing
         private const string searchedAssetName = "AIStrategicStateDefinition:";
 
-        private const int repeatedDecompilesLimit = 500; // higher values allow deeper decompiles but is exponentially slower
+        private const int repeatedDecompilesLimit = 100; // higher values allow deeper decompiles but is exponentially slower
         private static int repeatedDecompiles = 0;
         private static string currentElementName = "";
         private static string currentIdName = "";
@@ -740,7 +740,16 @@ else if (entryType == typeof(EntryWeakReferenceType))
 
                                 if (stringOffset != 0)
                                 {
-                                    attribute.Value += FileHelper.GetString(stringOffset, bin, stringLength);
+                                    // TO AVOID OUT OF BOUNDS CRASH
+                                    try
+                                    {
+                                        attribute.Value += FileHelper.GetString(stringOffset, bin, stringLength);
+                                    }
+                                    catch(ArgumentOutOfRangeException e)
+                                    {
+                                        return;
+                                    }
+                                    // TO AVOID OUT OF BOUNDS CRASH
                                 }
                                 break;
                             case Byte:
@@ -1274,10 +1283,22 @@ else if (entryType == typeof(EntryWeakReferenceType))
                 }
                 else if (entryType == typeof(EntryListType))
                 {
-                    int listLength = FileHelper.GetInt(binPosition, bin);
-                    binPosition += 4;
-                    int listOffset = FileHelper.GetInt(binPosition, bin);
-                    binPosition += 4;
+                    int listLength;
+                    int listOffset;
+
+                    // TO AVOID OUT OF BOUNDS CRASH
+                    try
+                    {
+                        listLength = FileHelper.GetInt(binPosition, bin);
+                        binPosition += 4;
+                        listOffset = FileHelper.GetInt(binPosition, bin);
+                        binPosition += 4;
+                    }
+                    catch(ArgumentOutOfRangeException e)
+                    {
+                        return;
+                    }
+                    // TO AVOID OUT OF BOUNDS CRASH
 
                     if (listLength < 0 || listOffset < 0 || listOffset >= bin.Length) // Guard against invalid list metadata
                     {
@@ -1619,10 +1640,22 @@ else if (entryType == typeof(EntryWeakReferenceType))
                             }
                         }
                     }
-                    document.Save(writer);
-                    stringBuilder.Replace("utf-16", "utf-8");
-                    output = stringBuilder.ToString();
-                    return true;
+
+                    // TO AVOID OUT OF INVALID ARGUMENT CRASH
+                    try
+                    {
+                        document.Save(writer);
+                        stringBuilder.Replace("utf-16", "utf-8");
+                        output = stringBuilder.ToString();
+                        return true;
+                    }
+                    catch(ArgumentException e)
+                    {
+                        stringBuilder.Replace("utf-16", "utf-8");
+                        output = stringBuilder.ToString();
+                        return true;
+                    }
+                    // TO AVOID OUT OF INVALID ARGUMENT CRASH
                 }
             }
             output = "Assets of this type are not defined. Maybe you tried to load an outdated version.";
